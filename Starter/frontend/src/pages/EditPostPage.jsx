@@ -1,13 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import PostForm from '../components/PostForm.jsx'
+import { request, readPostForm } from '../api/request.js'
 
-// TODO (student): Implement edit flow.
-// Suggested steps:
-// 1) Fetch existing post with GET /api/posts/:id.
-// 2) Pass fetched data to PostForm as initialData.
-// 3) On submit, send PUT /api/posts/:id.
-// 4) Navigate back to /posts/:id after successful save.
 function EditPostPage() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -18,8 +13,28 @@ function EditPostPage() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    // TODO (student): Replace this placeholder with GET /api/posts/:id fetch logic.
-    setLoading(false)
+    let ignore = false
+    setLoading(true)
+    setError(null)
+
+    async function loadPost() {
+      try {
+        const data = await request(`/api/posts/${id}`)
+        if (!ignore) setPost(data)
+      } catch (err) {
+        if (!ignore) {
+          setPost(null)
+          setError(`Could not load post: ${err.message}`)
+        }
+      } finally {
+        if (!ignore) setLoading(false)
+      }
+    }
+
+    loadPost()
+    return () => {
+      ignore = true
+    }
   }, [id])
 
   async function handleSubmit(e) {
@@ -27,14 +42,21 @@ function EditPostPage() {
     setSubmitting(true)
     setError(null)
 
-    // TODO (student): Implement PUT /api/posts/:id.
-    setError('TODO: implement PUT /api/posts/:id in EditPostPage')
-    setSubmitting(false)
+    try {
+      await request(`/api/posts/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(readPostForm(e.currentTarget)),
+      })
+      navigate(`/posts/${id}`)
+    } catch (err) {
+      setError(`Could not save changes: ${err.message}`)
+      setSubmitting(false)
+    }
   }
 
   if (loading) return <p className="status-msg">Loading…</p>
   if (error && !post) return <p className="status-msg error">{error}</p>
-  if (!post) return <p className="status-msg">TODO: Load a post before editing.</p>
+  if (!post) return <p className="status-msg">Post not found.</p>
 
   return (
     <div>

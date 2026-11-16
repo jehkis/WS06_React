@@ -1,20 +1,30 @@
 import { useEffect, useState } from 'react'
 import PostCard from '../components/PostCard.jsx'
+import { request } from '../api/request.js'
 
-// TODO (student): Fetch all posts from the backend and render them.
-// Suggested steps:
-// 1) Keep local state for posts, loading, and error.
-// 2) In useEffect, call GET /api/posts.
-// 3) Show loading and error states.
-// 4) Map posts into PostCard components.
 function HomePage() {
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    // TODO (student): Replace this placeholder with real fetch logic.
-    setLoading(false)
+    let ignore = false
+
+    async function loadPosts() {
+      try {
+        const data = await request('/api/posts')
+        if (!ignore) setPosts(data)
+      } catch (err) {
+        if (!ignore) setError(`Could not load posts: ${err.message}`)
+      } finally {
+        if (!ignore) setLoading(false)
+      }
+    }
+
+    loadPosts()
+    return () => {
+      ignore = true
+    }
   }, [])
 
   if (loading) return <p className="status-msg">Loading posts…</p>
@@ -26,12 +36,12 @@ function HomePage() {
         <p className="eyebrow">Blog</p>
         <h1 className="page-title">All posts</h1>
         <p className="page-copy">
-          TODO: Implement fetching posts from <code>/api/posts</code>.
+          Posts are loaded from <code>/api/posts</code>, newest first.
         </p>
       </div>
 
       {posts.length === 0 ? (
-        <p className="status-msg">No posts yet. Implement fetch logic in HomePage first.</p>
+        <p className="status-msg">No posts yet. Write the first one!</p>
       ) : (
         <ul className="post-list">
           {posts.map((post) => (

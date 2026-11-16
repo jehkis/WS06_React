@@ -1,13 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PostForm from '../components/PostForm.jsx'
+import { request, readPostForm } from '../api/request.js'
 
-// TODO (student): Implement create flow (POST /api/posts).
-// Suggested steps:
-// 1) Read form values in handleSubmit.
-// 2) POST JSON body to /api/posts.
-// 3) On success, navigate to /posts/:id.
-// 4) Show an error message on failure.
 function NewPostPage() {
   const navigate = useNavigate()
   const [submitting, setSubmitting] = useState(false)
@@ -18,9 +13,16 @@ function NewPostPage() {
     setSubmitting(true)
     setError(null)
 
-    // TODO (student): Implement this submit logic.
-    setError('TODO: implement POST /api/posts in NewPostPage')
-    setSubmitting(false)
+    try {
+      const created = await request('/api/posts', {
+        method: 'POST',
+        body: JSON.stringify(readPostForm(e.currentTarget)),
+      })
+      navigate(`/posts/${created._id}`)
+    } catch (err) {
+      setError(`Could not create post: ${err.message}`)
+      setSubmitting(false)
+    }
   }
 
   return (
