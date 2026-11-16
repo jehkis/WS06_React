@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const mongoose = require('mongoose');
 require('dotenv').config();
@@ -24,6 +26,16 @@ async function connectToDatabase() {
 app.use(express.json());
 
 app.use('/api/posts', postsRouter);
+
+// In production, serve the built React app (Starter/frontend/dist) from the same host.
+// Any non-API GET request falls back to index.html so client-side routes work on refresh.
+const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
+if (fs.existsSync(frontendDist)) {
+  app.use(express.static(frontendDist));
+  app.get(/^\/(?!api(\/|$)).*/, (req, res) => {
+    res.sendFile(path.join(frontendDist, 'index.html'));
+  });
+}
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });

@@ -1,0 +1,15 @@
+# Render Blueprint: one web service that serves both the API and the built React app.
+# Set MONGODB_URI in the Render dashboard (it is not stored in the repository).
+services:
+  - type: web
+    name: ws06-react
+    runtime: node
+    plan: free
+    buildCommand: cd Starter/frontend && npm ci && npm run build && cd ../backend && npm ci --omit=dev
+    startCommand: cd Starter/backend && node server.js
+    healthCheckPath: /api/posts
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: MONGODB_URI
+        sync: false
